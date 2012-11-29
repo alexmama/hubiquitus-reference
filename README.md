@@ -9,7 +9,7 @@ TODO
 
 An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox.
 
-Actors in Hubiquitus comply with the fundamental properties of an actor as defined by the Actor Model:
+Actors in Hubiquitus comply with the fundamental properties of an actor as defined by the [Actor Model](|http://en.wikipedia.org/wiki/Actor_model):
 
 * each actor has an inbox, a kind of FIFO queue into which other actors can post messages to be processed,
 * each actor has its proper behavior that is triggered sequentially for each message received in its inbox,
