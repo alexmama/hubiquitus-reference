@@ -1,15 +1,14 @@
 # The Hubiquitus Reference Guide
 
-## Table of contents
-TODO
+## Technical design
 
-## The Hubiquitus actor engine
+### Everything is an actor
 
-### Introduction to the actor model
+The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus programs are made of actors, thus complying with the [Actor Model](|http://en.wikipedia.org/wiki/Actor_model) paradigm.
 
-An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox.
+**An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
 
-Actors in Hubiquitus comply with the fundamental properties of an actor as defined by the [Actor Model](|http://en.wikipedia.org/wiki/Actor_model):
+Actors in Hubiquitus comply with the fundamental principles of an actor: 
 
 * each actor has an **inbox**, a kind of FIFO queue into which other actors can post messages to be processed,
 * each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
@@ -17,11 +16,9 @@ Actors in Hubiquitus comply with the fundamental properties of an actor as defin
 * each actor can itself post **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
 * each actor can create **children** to which it will then be able to post messages as to any other actor.
 
-### Hubiquitus actors
+### A NodeJS framework
 
-#### Why we choosed NodeJS
-
-Hubiquitus provides a pure implementation of the actor model for the great [NodeJS](http://nodejs.org) evented programming platform.
+Hubiquitus is basically an implementation of the actor model for the great [NodeJS](http://nodejs.org) evented programming platform.
 
 NodeJS is a natural choice as a core to implement the actor model since it provides features that comply with many aspects of the actor model:
 
@@ -34,11 +31,7 @@ NodeJS is a natural choice as a core to implement the actor model since it provi
 
 Most of the Hubiquitus magic lay behind a single JavaScript objet called *hactor* that defines the structure common to every Hubiquitus actors:
 
-|Property|Description|
-|-|-|
-|value|value|
-
-* a **unique key** that identifies the actor, a simple string formatted as a JID
+* a **unique key** that identifies the actor, a simple string formatted like a Jabber ID
 * a **behavior calllback** that is fired each time the actor receives a message
 * a set of **addresses** onto which the actor will accept incoming messages
 * an in-memory **state object** that the behavior function can read and write to
@@ -55,15 +48,17 @@ All you have to do to create an actor is to instanciate this object with the fol
 
 Once instanciated, you just have to start your actor and begin sending it messages, *et voilà* !
 
-	// 	Instanciate your actor
-	var MyActor = require('hubiquitus').hactor(
-		{ id: "myactor@localhost", in:["tcp://*.8888"]},
-		function(err, message){
-			// code your behavior below
-		});
+```js
+// 	Instanciate your actor
+var MyActor = require('hubiquitus').hactor(
+	{ id: "myactor@localhost", in:["tcp://*.8888"]},
+	function(err, message){
+		// code your behavior below
+	});
 
-	// Starting your actor
-	MyActor.start();
+// Starting your actor
+MyActor.start();
+```
 
 #### Inbound adapters
 
