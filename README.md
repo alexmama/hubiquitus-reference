@@ -4,9 +4,9 @@ Hubiquitus is an ubiquitous framework for build context-aware live apps.
 
 ## Docs
 
-For a short short intro of what Hubiquitus is and why we build it, [read this first](./Introduction.md).
+For a short short intro of what Hubiquitus is and why we build it, [read this first](/hubiquitus/hubiquitus-reference/blob/master/Introduction.md).
 
-If you want to go deeper inside the arcanes of Hubiquitus, you should follow [this link](./Reference.md).
+If you want to go deeper inside the arcanes of Hubiquitus, you should follow [this link](/hubiquitus/hubiquitus-reference/blob/master/Reference.md).
 
 ## Code
 
@@ -19,8 +19,9 @@ The Hubiquitus open source is segmented into a bunch of repositories, each of th
 ##### Native ports
 
 * [Google Android client API](https://github.com/hubiquitus/hubiquitus-android)
-* [Apple iOS client API](https://github.com/hubiquitus/hubiquitus-ios)
-* [MS Windows 8 client API](https://github.com/hubiquitus/hubiquitus-w8) 
+* [Apple iOS client API](https://github.com/hubiquitus/hubiquitusios)
+* [MS Windows 8 client API](https://github.com/hubiquitus/hubiquitus4w8) 
+* [Java client API](https://github.com/hubiquitus/hubiquitus4j) 
 
 ## License
 
