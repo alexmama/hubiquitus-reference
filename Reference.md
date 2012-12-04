@@ -18,7 +18,7 @@ Actors in Hubiquitus comply with the fundamental principles of an actor:
 
 The following figure summarizes these principles:
 
-![](./images/ActorModel.png)
+![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
 
 ### The 'russian dolls' 
 
@@ -31,7 +31,7 @@ The structure of Hubiquitus apps take the form of a "russian doll" with four nes
 
 The following figure summarize this topology:
 
-![](./images/HubiquitusExecModel.png)
+![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/HubiquitusExecModel.png)
 
 ### The root and the forest
 
