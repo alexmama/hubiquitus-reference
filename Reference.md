@@ -4,7 +4,7 @@
 
 ### Everything is an actor
 
-The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
+The Hubiquitus design follows the 'everything is an actor' philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
 
 **An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
 
