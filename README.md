@@ -4,9 +4,9 @@ Hubiquitus is an ubiquitous framework for build context-aware live apps.
 
 ## Docs
 
-For a short short intro of what Hubiquitus is and why we build it, [read this first](/Introduction.md).
+For a short short intro of what Hubiquitus is and why we build it, [read this first](./Introduction.md).
 
-If you want to go deeper inside the arcanes of Hubiquitus, you should follow [this link](/Reference.md).
+If you want to go deeper inside the arcanes of Hubiquitus, you should follow [this link](./Reference.md).
 
 ## Code
 
