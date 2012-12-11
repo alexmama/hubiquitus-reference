@@ -1,8 +1,12 @@
 # The Hubiquitus Reference Guide
 
+> IMPORTANT NOTICE: this document in under active writing
+
+This document describes the internals of the Hubiquitus framework.
+
 ## Technical design
 
-### Everything is an actor
+### The actor model
 
 The Hubiquitus design follows the 'everything is an actor' philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
 
@@ -13,12 +17,23 @@ Actors in Hubiquitus comply with the fundamental principles of an actor:
 * each actor has an **inbox**, a kind of FIFO queue into which other actors can post messages to be processed,
 * each actor has its proper **behavior** that is triggered sequentially for each message received in its inbox,
 * each actor maintains its own **state** that it doesn't share with anyone else ("share nothing" principle); this state can be modified as the actor processes incoming messages.
-* each actor can itself post **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
+* each actor can itself send **messages** to other actors; posting message is asynchronous so that it never blocks the process in which the actor is running,
 * each actor can create **children** to which it will then be able to post messages as to any other actor.
 
 The following figure summarizes these principles:
 
 ![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
+
+### Name and address
+
+**Since actors communicate using messages, Hubiquitus needs to know their `name`  and the `address` of their `inbox` so that it can properly deliver these messages to their recipients**.
+
+Hubiquitus use the web semantics for name and the addresses of an actor:
+
+* each `name` take the comply with the [**Uniform Resource Name**](http://tools.ietf.org/html/rfc2141) IETF standard. For example, the following string is a valid actor name: **urn:hubiquitus.org:johndoe**
+* each `address` comply with the [**Uniform Resource Location**](http://tools.ietf.org/html/rfc3986) IETF standard. For example, the following string is a valid actor's inbox address: **http://hubiquitus.org/johndoe**
+
+> please notice that precedent versions of Hubiquitus (until v0.5 included) used the JabberID semantics for the names of the actors
 
 ### The 'russian dolls' 
 
@@ -49,7 +64,6 @@ Actors are free to create as many child actors they want. These actors can eithe
 In both cases, child actors are stopped and destroyed when the parent actor's process stops.
 
 > note: to come in future versions (i) the ability to host a child in a process that already exists (ii) the ability to host a child actor in a processs that is not a "child" process
-
 
 ## Implementation details
 
@@ -105,13 +119,3 @@ Inbound adapters are special objects that are responsible for:
 
 * listening to the port you have specified using the transport protocol you have specified
 * registering the actor's behavior (remember, the custom callback you specified) to further I/O events (incoming messages)
-
-The figure below summarizes these principles:
-
-Authors and Contributors
-
-@alexmama
-
-## References
-
-@TODO@
