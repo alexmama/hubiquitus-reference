@@ -6,9 +6,11 @@ This document describes the internals of the Hubiquitus framework.
 
 ## Technical design
 
-### The actor model
+### Everthing is an actor
 
 The Hubiquitus design follows the 'everything is an actor' philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
+
+#### The actor model
 
 **An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
 
@@ -24,18 +26,46 @@ The following figure summarizes these principles:
 
 ![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
 
-### Name and address
+#### NodeJS as a container for actors
 
-**Since actors communicate using messages, Hubiquitus needs to know their `name`  and the `address` of their `inbox` so that it can properly deliver these messages to their recipients**.
+Hubiquitus is basically an implementation of the actor model for the great [NodeJS](http://nodejs.org) evented programming platform.
 
-Hubiquitus use the web semantics for name and the addresses of an actor:
+NodeJS is a natural choice as a container for actors since it provides features that comply with many aspects of the actor model:
 
-* each `name` take the comply with the [**Uniform Resource Name**](http://tools.ietf.org/html/rfc2141) IETF standard. For example, the following string is a valid actor name: **urn:hubiquitus.org:johndoe**
-* each `address` comply with the [**Uniform Resource Location**](http://tools.ietf.org/html/rfc3986) IETF standard. For example, the following string is a valid actor's inbox address: **http://hubiquitus.org/johndoe**
+* **Asynchronous evented I/O**: NodeJS allows binding *functions* to specific I/O events - such as "bytes has been written to this socket" - without blocking the execution thread until it occurs. This provides a simple and elegant way to implement the mechanism of the actor's inbox.
+* **Single threaded execution**: each NodeJS process run programs using a single execution thread, we are sure to never have to deal with concurrency issues.
+* **Child processes**: NodeJS natively supports creating forked process that communicates with their parent process using sockets, so that creating child actors as child processes becomes trivial.
+* **First-class functions**: since it relies on the JavaScript programming language, NodeJS allows passing functions as parameters so that passing a behavior as a function to an actor is also trivial.
 
-> please notice that precedent versions of Hubiquitus (until v0.5 included) used the JabberID semantics for the names of the actors
+NodeJS provides some interesting building blocks to implement actors, but lots of things remain to be designed.
 
-### The 'russian dolls' 
+#### Actor's name and address
+
+Since actors communicate using messages, we need to know their *name*  and their *address* so we can can properly deliver these messages to their expected recipients.
+
+**Each *name* or *address* MUST be unique inside a group of actors that need to collaborate.**
+
+Hubiquitus adopts the following IETF standards for formating the *name* and *address* of an actor:
+
+* each *name* SHOULD comply with the [**Uniform Resource Name**](http://tools.ietf.org/html/rfc2141) IETF standard. For example, the following string is a valid actor name: `urn:hubiquitus.org:johndoe`.
+* each *address* MUST comply with the [**Uniform Resource Location**](http://tools.ietf.org/html/rfc3986) IETF standard. For example, the following string is a valid actor's *inbox* address: `http://hubiquitus.org/johndoe`
+
+> Please notice that precedent versions of Hubiquitus (until v0.5 included) used the JabberID semantics for the names of the actors. At the time of writing, Hubiquitus do not controls the precise format of the name.
+
+#### Introducing *trackers*
+
+While sending a message to an actor, the sender do not necessary needs to know the *address* of its *inbox*. The only thing it needs to know is its *name*. 
+
+The Hubiquitus framework provides a special kind of actor that is called a ***tracker*** that acts as a **directory of actors**:
+
+* When an actor is starting, it **registers itself to a *tracker***, providing its name and addresses.
+* When an actor sends a message, it needs to **query the *tracker* for an address that match the name of the recipient**
+
+Like any other actor, a tracker can register to another tracker so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together. 
+
+### Topology of Hubiquitus apps
+
+#### From actors to apps - the 'russian dolls'
 
 The structure of Hubiquitus apps take the form of a "russian doll" with four nested levels:
 
@@ -48,13 +78,13 @@ The following figure summarize this topology:
 
 ![hubiquitus exec model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/HubiquitusExecModel.png)
 
-### The root and the forest
+#### The root and the forest
 
 We said that a process hosts multiple actors, but we need to be more precise: a process host only one `root actor` which itself potentially creates somes children, which themselves potentially create grandchildren, which themselves…and so one.
 
 We can say that **each process hosts the root of a tree of actors**. With the multiple processes it involves, **an application can be see as a forest of actors**.  
 
-### Child actors and child processes
+#### Child actors and child processes
 
 Actors are free to create as many child actors they want. These actors can either be created:
 
@@ -67,22 +97,12 @@ In both cases, child actors are stopped and destroyed when the parent actor's pr
 
 ## Implementation details
 
-### Hubiquitus programs are NodeJS ones
-
-Hubiquitus is basically an implementation of the actor model for the great [NodeJS](http://nodejs.org) evented programming platform.
-
-NodeJS is a natural choice as a core to implement the actor model since it provides features that comply with many aspects of the actor model:
-
-* **Single threaded execution**: each NodeJS process run programs using a single execution thread, we are sure to never have to deal with concurrency issues.
-* **Asynchronous evented I/O**: NodeJS allows a program to register to specific I/O events - such as "bytes has been written to this socket" - without blocking the execution thread until it occurs. This provides a simple and elegant way to implement the actor's inbox.
-* **Child processes**: NodeJS natively supports creating forked process that communicates with their parent process using an IPC socket channel, so that creating child actors as child processes becomes trivial.
-* **First-class functions**: since it relies on the JavaScript programming language, NodeJS allows passing functions as parameters so that passing a behavior as a function to an actor is also trivial.
 
 ### The `hactor`object
 
 Most of the Hubiquitus magic lay behind a single JavaScript objet called `hactor` that defines the structure common to every Hubiquitus actors:
 
-* `actor id`: a **unique** key that identifies the actor, a simple string formatted like a Jabber ID,
+* `actor id`: a **unique** key that identifies the actor, a simple string formatted like an URN,
 * `behavior`: a **Javascript calllback** that is fired each time the actor receives a message,
 * `endpoints`: a set of **addresses** onto which the actor will accept incoming messages
 * `state`: an in-memory object that holds the state of the actor and onto which the behavior can make reads and writes,
