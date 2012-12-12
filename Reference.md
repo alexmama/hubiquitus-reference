@@ -60,40 +60,71 @@ Hubiquitus adopts the following IETF standards for formating the *names* and *ad
 
 > Please notice that precedent versions of Hubiquitus (until v0.5 included) used the JabberID semantics for the names of the actors. At the time of writing, Hubiquitus do not controls the precise format of the name.
 
-#### *Inbound adapters*
+#### Trackers
 
-***Inbound adapters* act as inboxes for actors. They are responsible for binding the behaviour of the actor to every message received at an address**
+In order to allow a dynamic topology of actors accross hosts and network, each actor only knowns the *names* of the other actors it needs to talk with: it doesn't know their *addresses*.
 
-* For each actor's address, Hubiquitus will instanciate a matching inbound adapter. The type of adapter to instanciate is deduced from the elements of the URL address (for example, the `http://127.0.0.1:8888e` URL address matches the `HTTPAdapter`).
-* When an actor is starting, each adapter is reponsible for:
-	* listening to I/O events that could occur on a given protocol and port (for example, the `HTTPAdapter` created for the `http://*:8888` address will start listening on port 8888 using the HTTP transport protocol)
-	* registering the actor's behaviour function to be triggered each time a message is received 
+To enable them to communicate, Hubiquitus provides a kind of *directory service* to which  each actor will register its addresses so that they can be resolved by the others at runtime. This service take the form of a particular kind of actor called a ***tracker***.
 
-> Note: this mechanism is completely transparent to the developer since it is assumed by the Hubiquitus engine.
+Each time an address is registered or unregistered to a tracker, this tracker will publish an alert that subscribers can  
 
-The following figure explain these principles:
+Like any other actor, a tracker can register itself to another tracker so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together.
 
-(Yet to come)
+> TO COME HERE: schema of the principles explained above ; links to the code
 
-#### *Trackers*
+#### Adapters
 
-The Hubiquitus framework provides a special kind of service that is called a ***tracker*** that acts as a **name service for actors**.
+In order to be able to send and receive messages, actors need a transport layer. 
 
-Each time an inbound adapter is starting, it **registers itself to a *tracker***, providing the name of the actor and the address it is listening to, so that other actors can further discover that address. 
+Hubiquitus provides a wide range of wire transport protocols, each of them being implemented by specialized JavaScript objects called *adapters*.
 
-Each time an actor is sending a message, the list of addresses of the recipient address is retrieved from the *tracker*.
+Hubiquitus distinguished two kind of adapters:
 
-Like any other actor, a tracker can register to another tracker so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together.
+* the **inbound adapters**, that provide transports to the actors inboxes so that they can receive messages (and in some special cases "reply" to these messages)
+* the **outbound adapters**, that provide transports to the actors behaviours so that they can send messages (and in some special cases get a "response").
 
-> Note: this mechanism is completely transparent to the developer since it is assumed by the Hubiquitus engine.
+Each adapter declares a unique *URL pattern* that Hubiquitus will use to match with addresses.
 
-The following figure explain these principles:
+Consider for example a *HTTPAdapter* implementing the HTTP protocol. It would logically declare the following URL pattern: `http://*` so that any HTTP URL will match it (for example, the `http://127.0.0.1:8888` URL address matches the *HTTPAdapter*).
 
-(Yet to come)
+> TO COME HERE: list of the adapters available with their properties, the URL pattern matching rules, etc. ; links to the code.
 
-#### *Outbound adapters*
+Developers are free to add or extend Hubiquitus with their own adapters.
 
-(Yet to come)
+##### *Inbound adapters*
+
+*Inbound adapters* act as inbox plugins for actors. They are responsible for binding the behaviour of the actor to every message received at an address.
+
+Each time an actor is created, Hubiquitus will create as many inbound adapters as addresses declared by the actor. For each actor's address, Hubiquitus will instanciate an inbound adapter that match the address URL among the list of the supported adapters.
+
+At actor's startup, Hubiquitus will also automatically start its inbound adapters. While starting, inbound adapters will:
+
+* **bind the behaviour function to I/O events** that could occur on a given protocol and port (for example, the `HTTPAdapter` created for the `http://*:8888` address will start listening on port 8888 using the HTTP transport protocol) so that the behaviour will be triggered every time an incoming message is received.  
+* **register themselves to a *tracker***, providing the name of the actor and the address it is listening to, so that other actors can further discover that address.
+
+When the actor stops, Hubiquitus will also stop its inbound adapters. While stopping, inbound adapters will **unregister themselves to every tracker**, thus indicating that they will not be reachable anymore.
+
+> Note: this mechanism is completely masked to the developer since it is implemented by the Hubiquitus engine (API functions involved: `start`, `touchTrackers`, `send` and `lookup`)
+
+> TO COME HERE: schema of the principles explained above ; list of the inbound adapters available with their properties, the URL pattern they match, etc ; links to the code
+
+##### *Outbound adapters*
+
+*Outbound adapters* are created on-demand when actors ask for sending messages.
+
+Each time an actor wants to send a message to another actor, Hubiquitus will:
+
+* **query a tracker for the addresses of the recipient** (*TODO: document the rules that apply for selecting the address when multiple addresses are resolved*)
+* **launch an outbound adapter that match the URL address** and pass it the message to send
+
+Once launched, outbound adapters:
+
+* are kept alive and reused for further sends, thus avoiding unnecessary lookups 
+* listen for events published by the *tracker*  regarding the recipient address to detect recipient failures. 
+
+> Note: this mechanism is completely masked to the developer since it is implemented by the Hubiquitus engine (API functions involved: `send` and `lookup`)
+
+> TO COME HERE: schema of the principles explained above ; list of the outbound adapters available with their properties, the URL pattern they match, etc. ; links to the code
 
 ### Topology of Hubiquitus apps
 
