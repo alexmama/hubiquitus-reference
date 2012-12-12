@@ -6,11 +6,11 @@ This document describes the internals of the Hubiquitus framework.
 
 ## Technical design
 
-### Everthing is an actor
+### Everything is an actor
 
-The Hubiquitus design follows the 'everything is an actor' philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
+The Hubiquitus design follows the "everything is an actor" philosophy, meaning that every Hubiquitus apps are made of actors, thus complying with the [Actor Model](http://en.wikipedia.org/wiki/Actor_model)) paradigm.
 
-#### The actor model
+#### Introducing the actor model
 
 **An actor is a form of lightweight computational entity that sequentially process incoming messages received on its inbox**
 
@@ -26,42 +26,74 @@ The following figure summarizes these principles:
 
 ![actor model](https://github.com/hubiquitus/hubiquitus-reference/raw/master/images/ActorModel.png)
 
-#### NodeJS as a container for actors
+#### Actors talk JavaScript
 
 Hubiquitus is basically an implementation of the actor model for the great [NodeJS](http://nodejs.org) evented programming platform.
 
 NodeJS is a natural choice as a container for actors since it provides features that comply with many aspects of the actor model:
 
-* **Asynchronous evented I/O**: NodeJS allows binding *functions* to specific I/O events - such as "bytes has been written to this socket" - without blocking the execution thread until it occurs. This provides a simple and elegant way to implement the mechanism of the actor's inbox.
+* **Asynchronous I/O**: NodeJS allows binding *functions* to specific I/O events - such as "bytes has been written to this socket" - without blocking the execution thread until it occurs. This provides a simple and elegant way to implement the mechanism of the actor's inbox.
 * **Single threaded execution**: each NodeJS process run programs using a single execution thread, we are sure to never have to deal with concurrency issues.
 * **Child processes**: NodeJS natively supports creating forked process that communicates with their parent process using sockets, so that creating child actors as child processes becomes trivial.
-* **First-class functions**: since it relies on the JavaScript programming language, NodeJS allows passing functions as parameters so that passing a behavior as a function to an actor is also trivial.
 
-NodeJS provides some interesting building blocks to implement actors, but lots of things remain to be designed.
+Choosing NodeJS means using JavaScript as the default language to implement the behaviour of the actors. **Simply explained: behaviour = function.**
 
-#### Actor's name and address
+As a language, JavaScript is probably not the one every developer is dreaming about, but it has strong properties for an actor-based programming model:
+
+* **Dynamic language**: JS is not statically typed nor compiled, which allows adopting easily an agile development approach for actors.
+* **First-class functions**: JS allows passing functions as parameters so that injecting a behavior into an actor, a child actor for example, is a simple task.
+
+### Wiring actors together
+
+#### Names and addresses
 
 Since actors communicate using messages, we need to know their *name*  and their *address* so we can can properly deliver these messages to their expected recipients.
 
 **Each *name* or *address* MUST be unique inside a group of actors that need to collaborate.**
 
-Hubiquitus adopts the following IETF standards for formating the *name* and *address* of an actor:
+**Each actor can have multiple addresses.**
+
+Hubiquitus adopts the following IETF standards for formating the *names* and *addresses* of actors:
 
 * each *name* SHOULD comply with the [**Uniform Resource Name**](http://tools.ietf.org/html/rfc2141) IETF standard. For example, the following string is a valid actor name: `urn:hubiquitus.org:johndoe`.
-* each *address* MUST comply with the [**Uniform Resource Location**](http://tools.ietf.org/html/rfc3986) IETF standard. For example, the following string is a valid actor's *inbox* address: `http://hubiquitus.org/johndoe`
+* each *address* MUST comply with the [**Uniform Resource Location**](http://tools.ietf.org/html/rfc3986) IETF standard. For example, the following string is a valid actor's *address*: `http://*:8888`
 
 > Please notice that precedent versions of Hubiquitus (until v0.5 included) used the JabberID semantics for the names of the actors. At the time of writing, Hubiquitus do not controls the precise format of the name.
 
-#### Introducing *trackers*
+#### *Inbound adapters*
 
-While sending a message to an actor, the sender do not necessary needs to know the *address* of its *inbox*. The only thing it needs to know is its *name*. 
+***Inbound adapters* act as inboxes for actors. They are responsible for binding the behaviour of the actor to every message received at an address**
 
-The Hubiquitus framework provides a special kind of actor that is called a ***tracker*** that acts as a **directory of actors**:
+* For each actor's address, Hubiquitus will instanciate a matching inbound adapter. The type of adapter to instanciate is deduced from the elements of the URL address (for example, the `http://127.0.0.1:8888e` URL address matches the `HTTPAdapter`).
+* When an actor is starting, each adapter is reponsible for:
+	* listening to I/O events that could occur on a given protocol and port (for example, the `HTTPAdapter` created for the `http://*:8888` address will start listening on port 8888 using the HTTP transport protocol)
+	* registering the actor's behaviour function to be triggered each time a message is received 
 
-* When an actor is starting, it **registers itself to a *tracker***, providing its name and addresses.
-* When an actor sends a message, it needs to **query the *tracker* for an address that match the name of the recipient**
+> Note: this mechanism is completely transparent to the developer since it is assumed by the Hubiquitus engine.
 
-Like any other actor, a tracker can register to another tracker so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together. 
+The following figure explain these principles:
+
+(Yet to come)
+
+#### *Trackers*
+
+The Hubiquitus framework provides a special kind of service that is called a ***tracker*** that acts as a **name service for actors**.
+
+Each time an inbound adapter is starting, it **registers itself to a *tracker***, providing the name of the actor and the address it is listening to, so that other actors can further discover that address. 
+
+Each time an actor is sending a message, the list of addresses of the recipient address is retrieved from the *tracker*.
+
+Like any other actor, a tracker can register to another tracker so that an address can be resolved accross multiple trackers. This mechanism allows federating multiple groups of actors together.
+
+> Note: this mechanism is completely transparent to the developer since it is assumed by the Hubiquitus engine.
+
+The following figure explain these principles:
+
+(Yet to come)
+
+#### *Outbound adapters*
+
+(Yet to come)
 
 ### Topology of Hubiquitus apps
 
